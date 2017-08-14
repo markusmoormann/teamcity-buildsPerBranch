@@ -1,9 +1,9 @@
-#Teamcity Builds per Branch Plugin
+# Teamcity Builds per Branch Plugin
 
 A TeamCity plugin for running parallel builds in different branches. After installing and configuring this plugin TeamCity queues builds if there is already one running build in this branch. 
 
 ## Usage instructions
-###Installing the plugin
+### Installing the plugin
 
 The plugin is distributed as a ZIP file, and is available from our download page. To install:
 
