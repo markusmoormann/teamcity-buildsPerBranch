@@ -33,7 +33,7 @@ class BuildPerBranchPrecondition : StartBuildPrecondition {
             val defaultBranchName = parameters.getOrDefault(DEFAULT_BRANCH_SETTING, DEFAULT_BRANCH_NAME)
             val queuedBuildBranch = queuedBuildInfo.buildPromotion.branch?.name?.replace(DEFAULT_BRANCH, defaultBranchName)
 
-            return if (existsRunningBuildWithSameBranch(queuedBuildInfo, queuedBuildBranch, buildDistributorInput.runningBuilds))
+            return if (existsRunningBuildWithSameBranch(defaultBranchName, queuedBuildInfo, queuedBuildBranch, buildDistributorInput.runningBuilds))
                 SimpleWaitReason("branch $queuedBuildBranch is already building")
             else
                 null
@@ -41,20 +41,25 @@ class BuildPerBranchPrecondition : StartBuildPrecondition {
         return null
     }
 
-    private fun existsRunningBuildWithSameBranch(queuedBuild: SQueuedBuild,
+    private fun existsRunningBuildWithSameBranch(defaultBranchName: String,
+                                                 queuedBuild: SQueuedBuild,
                                                  queuedBuildBranch: String?,
                                                  runningBuilds: Collection<RunningBuildInfo>): Boolean {
         if (queuedBuildBranch == null) {
             return false
         }
         val runningBranches = runningBuilds
+                .asSequence()
                 .filter { it is SRunningBuild }
                 .map { it as SRunningBuild }
                 .filter { it.buildTypeId == queuedBuild.buildTypeId }
                 .filter { it.branch != null }
                 .map { it.branch!!.displayName }
+                .map { it.replace(DEFAULT_BRANCH, defaultBranchName) }
+                .toList()
         if (LOG.isDebugEnabled) {
-            LOG.debug("queuedBranch: " + queuedBuildBranch)
+            LOG.debug("Build queue id ${queuedBuild.itemId}: ${queuedBuild.buildType.extendedFullName}")
+            LOG.debug("queuedBranch: $queuedBuildBranch")
             LOG.debug("runningBranches: " + Arrays.toString(runningBranches.toTypedArray()))
         }
         return runningBranches.contains(queuedBuildBranch)
